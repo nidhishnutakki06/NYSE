@@ -15,7 +15,7 @@ const INITIAL_WORKOUTS = [
     { id: '3', title: 'Yoga Flexibility', duration: '30 Min', intensity: 'Low', target: 'Flexibility', url: 'https://www.youtube.com/embed/v7AYKMP6rOE' },
     { id: '4', title: 'Posture Corrective', duration: '15 Min', intensity: 'Low', target: 'Health', url: 'https://www.youtube.com/embed/dWcORvu-jtU' },
     { id: '5', title: 'Core Crusher', duration: '20 Min', intensity: 'Medium', target: 'Abs', url: 'https://www.youtube.com/embed/NQxEUC3-aaE' },
-    { id: '6', title: 'Barbell Overhead', duration: '40 Min', intensity: 'High', target: 'Strength', url: 'https://www.youtube.com/embed/NQxEUC3-aaE' },
+    { id: '6', title: 'Barbell Overload', duration: '40 Min', intensity: 'High', target: 'Strength', url: 'https://www.youtube.com/embed/KP1sYz2VICk' },
 ];
 
 export function WorkoutProvider({ children }) {

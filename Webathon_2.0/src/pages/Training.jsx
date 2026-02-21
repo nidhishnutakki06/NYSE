@@ -9,7 +9,7 @@ import { useWorkouts } from '../context/WorkoutContext';
 export default function Training() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { addWorkout } = useWorkouts();
+    const { workouts } = useWorkouts();
 
     // Safely retrieve workout from navigation state or assign a fallback
     const workout = location.state?.workout || {
@@ -57,17 +57,9 @@ export default function Training() {
     };
 
     const handleScheduleSuggested = (suggestedWorkout) => {
-        // Create a new workout object and push to global context
-        const newWorkout = {
-            id: Date.now().toString(),
-            title: suggestedWorkout.title,
-            duration: suggestedWorkout.duration.split(' • ')[0],
-            intensity: suggestedWorkout.duration.split(' • ')[1],
-            target: suggestedWorkout.tag,
-            url: workout.url // Use the same base URL or a placeholder if a unique one isn't defined
-        };
-        addWorkout(newWorkout);
-        navigate('/workouts');
+        // Since it's already in the library, just navigate to it to start immediately
+        resetWorkout();
+        navigate('/training', { state: { workout: suggestedWorkout } });
     };
 
     // -------------------------------------------------------------------------------- //
@@ -147,20 +139,16 @@ export default function Training() {
                         <p className="text-zinc-400 text-sm mb-6">Based on your fatigue levels and form breakdown today, here is what our engine recommends for your next sessions:</p>
 
                         <div className="space-y-3">
-                            {[
-                                { title: 'Active Recovery Flow', desc: '15 Min • Low Intensity', tag: 'Mobility' },
-                                { title: 'Core Crusher Vol. 2', desc: '20 Min • Medium Intensity', tag: 'Strength' },
-                                { title: 'Upper Body Power', desc: '45 Min • High Intensity', tag: 'Strength' },
-                            ].map((w, i) => (
+                            {workouts.filter(w => w.id !== workout.id).slice(0, 3).map((w, i) => (
                                 <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-[#27272A] hover:border-[#CBFB5E]/50 hover:bg-[#27272A]/30 transition-all cursor-pointer group">
                                     <div>
                                         <p className="font-bold text-white group-hover:text-[#CBFB5E] transition-colors">{w.title}</p>
                                         <div className="flex items-center gap-3 mt-1">
-                                            <span className="text-xs text-zinc-400">{w.desc}</span>
-                                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#27272A] text-zinc-300">{w.tag}</span>
+                                            <span className="text-xs text-zinc-400">{w.duration} • {w.intensity}</span>
+                                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#27272A] text-zinc-300">{w.target}</span>
                                         </div>
                                     </div>
-                                    <Button onClick={() => handleScheduleSuggested(w)} variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">Schedule</Button>
+                                    <Button onClick={() => handleScheduleSuggested(w)} variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">Start Next</Button>
                                 </div>
                             ))}
                         </div>
