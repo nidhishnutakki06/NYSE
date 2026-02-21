@@ -2,9 +2,11 @@ import React from 'react';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { MapPin, FileText, HelpCircle, Settings, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     const menuOptions = [
         { title: 'Workshops', subtitle: 'Nearby workshops and events', icon: <MapPin size={24} />, color: 'text-blue-400' },
@@ -21,33 +23,39 @@ export default function Profile() {
             </div>
 
             {/* Profile Identity Card */}
-            <Card className="bg-gradient-to-br from-[#18181B] to-[#27272A] border-[#3F3F46]">
+            <Card className="bg-gradient-to-br from-[#18181B] to-[#27272A] border-[#3F3F46] p-6">
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                     <div className="w-24 h-24 rounded-full bg-[#CBFB5E]/10 border-2 border-[#CBFB5E] flex items-center justify-center text-4xl font-black text-[#CBFB5E]">
-                        {user?.name?.charAt(0) || 'A'}
+                        {user?.user_metadata?.name?.charAt(0) || 'A'}
                     </div>
 
-                    <div className="flex-1 text-center md:text-left">
-                        <h2 className="text-2xl font-bold text-white mb-1">{user?.name || 'Pro Athlete'}</h2>
-                        <p className="text-zinc-400 text-sm mb-6">Premium Member</p>
+                    <div className="flex-1 text-center md:text-left w-full">
+                        <h2 className="text-2xl font-bold text-white mb-1">{user?.user_metadata?.name || 'Athlete'}</h2>
+                        <p className="text-zinc-400 text-sm mb-6">
+                            Focus: <span className="text-[#CBFB5E]">{user?.user_metadata?.fitnessGoals || 'General Fitness'}</span>
+                        </p>
 
                         {/* Characteristics Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-[#09090B] border border-[#27272A] rounded-lg p-3 text-center transition-colors hover:border-[#CBFB5E]/30">
-                                <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Age</p>
-                                <p className="text-lg font-black text-white">24</p>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+                            <div className="bg-[#09090B] border border-[#27272A] rounded-xl p-4 text-center transition-colors hover:border-[#CBFB5E]/30">
+                                <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">Age</p>
+                                <p className="text-2xl font-black text-white">{user?.user_metadata?.age || 24}</p>
                             </div>
-                            <div className="bg-[#09090B] border border-[#27272A] rounded-lg p-3 text-center transition-colors hover:border-[#CBFB5E]/30">
-                                <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Blood</p>
-                                <p className="text-lg font-black text-red-400">O+</p>
+                            <div className="bg-[#09090B] border border-[#27272A] rounded-xl p-4 text-center transition-colors hover:border-[#CBFB5E]/30">
+                                <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">Blood</p>
+                                <p className="text-2xl font-black text-red-400">{user?.user_metadata?.bloodGroup || '-'}</p>
                             </div>
-                            <div className="bg-[#09090B] border border-[#27272A] rounded-lg p-3 text-center transition-colors hover:border-[#CBFB5E]/30">
-                                <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Height</p>
-                                <p className="text-lg font-black text-white">180<span className="text-xs text-zinc-500 ml-1 font-semibold">cm</span></p>
+                            <div className="bg-[#09090B] border border-[#27272A] rounded-xl p-4 text-center transition-colors hover:border-[#CBFB5E]/30">
+                                <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">Height</p>
+                                <p className="text-2xl font-black text-white">
+                                    {user?.user_metadata?.height || 180}<span className="text-sm text-zinc-500 ml-1 font-semibold">cm</span>
+                                </p>
                             </div>
-                            <div className="bg-[#09090B] border border-[#27272A] rounded-lg p-3 text-center transition-colors hover:border-[#CBFB5E]/30">
-                                <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Weight</p>
-                                <p className="text-lg font-black text-white">78<span className="text-xs text-zinc-500 ml-1 font-semibold">kg</span></p>
+                            <div className="bg-[#09090B] border border-[#27272A] rounded-xl p-4 text-center transition-colors hover:border-[#CBFB5E]/30">
+                                <p className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-1">Weight</p>
+                                <p className="text-2xl font-black text-white">
+                                    {user?.user_metadata?.weight || 75}<span className="text-sm text-zinc-500 ml-1 font-semibold">kg</span>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -60,6 +68,11 @@ export default function Profile() {
                 {menuOptions.map((option, idx) => (
                     <Card
                         key={idx}
+                        onClick={() => {
+                            if (option.title === 'Workshops') {
+                                navigate('/workshops');
+                            }
+                        }}
                         className="flex items-center gap-4 p-4 hover:bg-[#27272A] cursor-pointer transition-all hover:scale-[1.01] group border-transparent hover:border-[#3F3F46]"
                     >
                         <div className={`p-3 rounded-xl bg-[#09090B] border border-[#27272A] ${option.color} group-hover:scale-110 transition-transform`}>

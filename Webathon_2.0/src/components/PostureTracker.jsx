@@ -131,7 +131,7 @@ export default function PostureTracker({ onPostureStatusChange }) {
 
     return (
         <div className="relative w-full h-full overflow-hidden rounded-xl bg-black">
-            <video ref={videoRef} className="hidden" playsInline />
+            <video ref={videoRef} className="absolute opacity-0 w-[1px] h-[1px]" playsInline autoPlay muted />
             <canvas
                 ref={canvasRef}
                 className="absolute top-0 left-0 w-full h-full object-cover"

@@ -5,6 +5,8 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { MOCK_USER } from '../services/mockData';
 import { useWorkouts } from '../context/WorkoutContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../config/supabaseClient';
 
 // Mock Data for the Calendar Section
 const generateWeekData = () => {
@@ -29,7 +31,11 @@ export default function HomePage() {
     const [weekData, setWeekData] = useState([]);
     const [selectedDay, setSelectedDay] = useState(null);
     const { workouts } = useWorkouts();
+    const { user } = useAuth(); // Extracted global Supabase session
     const navigate = useNavigate();
+
+    // Map the actual User Name from Supabase auth meta (with fallback)
+    const displayName = user?.user_metadata?.name || 'Athlete';
 
     useEffect(() => {
         // Set Greeting based on time
@@ -48,6 +54,26 @@ export default function HomePage() {
         setSelectedDay(data[todayIndex]);
     }, []);
 
+    // Test Supabase Connection (Temporary Trial Code) - Moved to isolated useEffect
+    useEffect(() => {
+        const testSupabaseConnection = async () => {
+            try {
+                console.log("Testing Supabase Connection...");
+                const { data, error } = await supabase.from('workshops').select('*');
+
+                if (error) {
+                    console.error("Supabase Test Error:", error);
+                } else {
+                    console.log("Supabase Connection Successful! Retrieved 'workshops' data:", data);
+                }
+            } catch (err) {
+                console.error("Unexpected Error during Supabase Test:", err);
+            }
+        };
+
+        testSupabaseConnection();
+    }, []);
+
     // Mock progress for the training course (e.g., 65%)
     const courseProgress = 65;
 
@@ -56,7 +82,7 @@ export default function HomePage() {
             {/* 1. Top Section: Greeting & Quote */}
             <div className="flex flex-col gap-2">
                 <h1 className="text-4xl font-extrabold text-white tracking-tight">
-                    {greeting}, {MOCK_USER.name}!
+                    {greeting}, {displayName}!
                 </h1>
                 <p className="text-lg text-zinc-400 italic font-serif">
                     "The pain you feel today will be the strength you feel tomorrow."
