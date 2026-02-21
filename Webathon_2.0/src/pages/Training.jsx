@@ -10,7 +10,7 @@ export default function Training() {
 
     // Status can be 'idle', 'active', 'completed'
     const [workoutStatus, setWorkoutStatus] = useState('idle');
-    const [timeLeft, setTimeLeft] = useState(60); // 60 second timer
+    const [timeLeft, setTimeLeft] = useState(15); // 15 second timer
     const [reps, setReps] = useState(0);
     const [postureCorrect, setPostureCorrect] = useState(true);
 
@@ -41,7 +41,7 @@ export default function Training() {
 
     const resetWorkout = () => {
         setWorkoutStatus('idle');
-        setTimeLeft(60);
+        setTimeLeft(15);
         setReps(0);
     };
 
