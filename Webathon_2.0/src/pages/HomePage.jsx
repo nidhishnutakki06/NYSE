@@ -30,8 +30,11 @@ export default function HomePage() {
     useEffect(() => {
         // Set Greeting based on time
         const hour = new Date().getHours();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (hour < 12) setGreeting('Good Morning');
+         
         else if (hour < 18) setGreeting('Good Afternoon');
+         
         else setGreeting('Good Evening');
 
         // Initialize Calendar

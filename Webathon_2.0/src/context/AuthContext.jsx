@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
@@ -6,7 +7,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null); // null means not logged in
     const [isLoading, setIsLoading] = useState(false);
 
-    const login = async (email, password) => {
+    const login = async (email) => {
         setIsLoading(true);
         // Mock login delay
         await new Promise(resolve => setTimeout(resolve, 800));

@@ -35,6 +35,7 @@ export default function Training() {
                 if (Math.random() > 0.5) setReps(r => r + 1);
             }, 1000);
         } else if (workoutStatus === 'active' && timeLeft === 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setWorkoutStatus('completed');
         }
 

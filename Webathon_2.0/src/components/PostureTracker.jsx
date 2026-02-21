@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { Pose } from "@mediapipe/pose";
 import { Camera } from "@mediapipe/camera_utils";
 import { drawLandmarks, drawConnectors, POSE_CONNECTIONS } from "@mediapipe/drawing_utils";
@@ -8,50 +8,7 @@ export default function PostureTracker({ onPostureStatusChange }) {
     const canvasRef = useRef(null);
     const beepRef = useRef(null);
 
-    useEffect(() => {
-        // Warning sound
-        beepRef.current = new Audio(
-            "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-        );
-
-        const pose = new Pose({
-            locateFile: (file) =>
-                `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-        });
-
-        pose.setOptions({
-            modelComplexity: 1,
-            smoothLandmarks: true,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5,
-            selfieMode: true
-        });
-
-        pose.onResults(onResults);
-
-        let camera = null;
-        if (videoRef.current) {
-            camera = new Camera(videoRef.current, {
-                onFrame: async () => {
-                    if (videoRef.current) {
-                        await pose.send({ image: videoRef.current });
-                    }
-                },
-                width: 640,
-                height: 480
-            });
-            camera.start();
-        }
-
-        return () => {
-            if (camera) {
-                camera.stop();
-            }
-            pose.close();
-        };
-    }, []);
-
-    function onResults(results) {
+    const onResults = useCallback((results) => {
         if (!canvasRef.current) return;
 
         const canvas = canvasRef.current;
@@ -127,7 +84,50 @@ export default function PostureTracker({ onPostureStatusChange }) {
         }
 
         ctx.restore();
-    }
+    }, [onPostureStatusChange]);
+
+    useEffect(() => {
+        // Warning sound
+        beepRef.current = new Audio(
+            "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+        );
+
+        const pose = new Pose({
+            locateFile: (file) =>
+                `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5,
+            selfieMode: true
+        });
+
+        pose.onResults(onResults);
+
+        let camera = null;
+        if (videoRef.current) {
+            camera = new Camera(videoRef.current, {
+                onFrame: async () => {
+                    if (videoRef.current) {
+                        await pose.send({ image: videoRef.current });
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            camera.start();
+        }
+
+        return () => {
+            if (camera) {
+                camera.stop();
+            }
+            pose.close();
+        };
+    }, [onResults]);
 
     return (
         <div className="relative w-full h-full overflow-hidden rounded-xl bg-black">

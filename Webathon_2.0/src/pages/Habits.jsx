@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Card from '../components/Card';
 import { Target, CheckCircle2 } from 'lucide-react';
 
 export default function Habits() {
     // Generate dummy data for GitHub-style heatmap (last 30 days wrapper simulation)
-    const heatmapData = Array.from({ length: 90 }).map(() => Math.floor(Math.random() * 4));
+    const heatmapData = useMemo(() => Array.from({ length: 90 }).map(() => Math.floor(Math.random() * 4)), []);
 
     const getColor = (level) => {
         switch (level) {
@@ -98,8 +98,8 @@ export default function Habits() {
                             <div className="flex items-center gap-4">
                                 {/* Custom Checkbox UI */}
                                 <div className={`w-6 h-6 rounded flex items-center justify-center border transition-colors ${item.completed
-                                        ? 'bg-[#CBFB5E] border-[#CBFB5E] text-black shadow-[0_0_10px_rgba(203,251,94,0.3)]'
-                                        : 'bg-[#27272A] border-[#3F3F46] group-hover:border-zinc-400'
+                                    ? 'bg-[#CBFB5E] border-[#CBFB5E] text-black shadow-[0_0_10px_rgba(203,251,94,0.3)]'
+                                    : 'bg-[#27272A] border-[#3F3F46] group-hover:border-zinc-400'
                                     }`}>
                                     {item.completed && <CheckCircle2 size={16} strokeWidth={3} />}
                                 </div>
