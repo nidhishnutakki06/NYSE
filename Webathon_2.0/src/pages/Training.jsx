@@ -1,41 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Camera, AlertCircle, Maximize, Play, Pause, ChevronLeft, CheckCircle2, TrendingUp, Target, Award, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import PostureTracker from '../components/PostureTracker';
 
 export default function Training() {
     const navigate = useNavigate();
-    const videoRef = useRef(null);
-    const [hasCamera, setHasCamera] = useState(false);
 
     // Status can be 'idle', 'active', 'completed'
     const [workoutStatus, setWorkoutStatus] = useState('idle');
-    const [timeLeft, setTimeLeft] = useState(10); // 10 second mock timer
+    const [timeLeft, setTimeLeft] = useState(60); // 60 second timer
     const [reps, setReps] = useState(0);
-
-    // Camera setup
-    useEffect(() => {
-        async function setupCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                }
-                setHasCamera(true);
-            } catch (err) {
-                console.error("Camera access denied or unavailable", err);
-                setHasCamera(false);
-            }
-        }
-        setupCamera();
-
-        return () => {
-            if (videoRef.current && videoRef.current.srcObject) {
-                videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-            }
-        };
-    }, []);
+    const [postureCorrect, setPostureCorrect] = useState(true);
 
     // Timer Logic
     useEffect(() => {
@@ -64,7 +41,7 @@ export default function Training() {
 
     const resetWorkout = () => {
         setWorkoutStatus('idle');
-        setTimeLeft(10);
+        setTimeLeft(60);
         setReps(0);
     };
 
@@ -238,43 +215,32 @@ export default function Training() {
                     </div>
 
                     <div className="w-full h-[400px] lg:h-full rounded-xl bg-black relative overflow-hidden border border-[#27272A]">
-                        {hasCamera ? (
-                            <video ref={videoRef} autoPlay playsInline muted className={`object-cover w-full h-full transition-opacity duration-300 ${workoutStatus === 'active' ? 'opacity-100' : 'opacity-60 grayscale-[50%]'}`} />
+                        {workoutStatus === 'active' ? (
+                            <PostureTracker onPostureStatusChange={setPostureCorrect} />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500">
                                 <Camera size={48} className="mb-4 opacity-50" />
-                                <p>Waiting for camera permissions...</p>
+                                <p>Waiting for tracker activation...</p>
                                 <p className="text-xs mt-2 text-center px-8">Ensure your browser allows camera access to use real-time AI tracking.</p>
                             </div>
                         )}
 
-                        {/* Mock AI Overlays - Only visible when ACTIVE */}
-                        {workoutStatus === 'active' && hasCamera && (
+                        {/* ML Live Telemetry Overlays - Only visible when ACTIVE */}
+                        {workoutStatus === 'active' && (
                             <>
-                                <div className="absolute top-0 left-0 w-full h-full border-[3px] border-[#CBFB5E]/40 animate-pulse" />
-
-                                {/* Skeleton joints overlay (mock) */}
-                                <div className="absolute top-1/4 left-1/3 w-3 h-3 rounded-full bg-[#CBFB5E] shadow-[0_0_10px_#CBFB5E]" />
-                                <div className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full bg-[#CBFB5E] shadow-[0_0_15px_#CBFB5E]" />
-                                <div className="absolute top-3/4 right-1/3 w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_red]" />
-
-                                {/* Connecting Lines (mock) */}
-                                <div className="absolute top-[30%] left-[38%] w-24 h-0.5 bg-[#CBFB5E]/50 rotate-45" />
-                                <div className="absolute top-[60%] left-[55%] w-32 h-0.5 bg-red-500/50 -rotate-12" />
+                                <div className={`absolute top-0 left-0 w-full h-full border-[3px] pointer-events-none transition-colors duration-300 ${postureCorrect ? 'border-[#CBFB5E]/40' : 'border-red-500/80 animate-pulse'}`} />
 
                                 {/* Real-time Feedback Modals */}
-                                <div className="absolute top-4 left-4 right-4 flex flex-col gap-2 pointer-events-none">
-                                    <div className="bg-[#09090B]/80 backdrop-blur border border-[#CBFB5E] text-[#CBFB5E] px-4 py-2 rounded-lg font-bold shadow-[0_0_15px_rgba(203,251,94,0.2)] inline-block self-start">
-                                        Good tempo • 92% Acc
-                                    </div>
-                                </div>
-                                <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-2 pointer-events-none items-start">
-                                    <div className="bg-red-500/20 backdrop-blur border border-red-500 text-red-500 px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                                        <AlertCircle size={16} /> Lower hips (Detected 2x)
-                                    </div>
-                                    <div className="bg-orange-500/20 backdrop-blur border border-orange-500 text-orange-500 px-4 py-2 rounded-lg font-bold flex items-center gap-2">
-                                        <AlertCircle size={16} /> Keep back straight
-                                    </div>
+                                <div className="absolute top-4 left-4 right-4 flex flex-col gap-2 pointer-events-none z-50">
+                                    {postureCorrect ? (
+                                        <div className="bg-[#09090B]/80 backdrop-blur border border-[#CBFB5E] text-[#CBFB5E] px-4 py-2 rounded-lg font-bold shadow-[0_0_15px_rgba(203,251,94,0.2)] inline-block self-start">
+                                            Posture Optimal • Tracking
+                                        </div>
+                                    ) : (
+                                        <div className="bg-red-500/90 backdrop-blur border border-red-500 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-in slide-in-from-top-2">
+                                            <AlertCircle size={16} /> Hands must be near head!
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         )}
