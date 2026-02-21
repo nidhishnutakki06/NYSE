@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Camera, AlertCircle, Maximize, Play, Pause, ChevronLeft, CheckCircle2, TrendingUp, Target, Award, ArrowRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Card from '../components/Card';
@@ -24,6 +24,12 @@ export default function Training() {
     const [timeLeft, setTimeLeft] = useState(15); // 15 second timer
     const [reps, setReps] = useState(0);
     const [postureCorrect, setPostureCorrect] = useState(true);
+    const postureCorrectRef = useRef(true);
+    const [stats, setStats] = useState({ totalSeconds: 0, correctSeconds: 0 });
+
+    useEffect(() => {
+        postureCorrectRef.current = postureCorrect;
+    }, [postureCorrect]);
 
     // Timer Logic
     useEffect(() => {
@@ -31,6 +37,13 @@ export default function Training() {
         if (workoutStatus === 'active' && timeLeft > 0) {
             timer = setInterval(() => {
                 setTimeLeft(prev => prev - 1);
+
+                // Track accuracy sample every second
+                setStats(prev => ({
+                    totalSeconds: prev.totalSeconds + 1,
+                    correctSeconds: prev.correctSeconds + (postureCorrectRef.current ? 1 : 0)
+                }));
+
                 // Randomly mock reps going up while active
                 if (Math.random() > 0.5) setReps(r => r + 1);
             }, 1000);
@@ -60,6 +73,7 @@ export default function Training() {
     const handleScheduleSuggested = (suggestedWorkout) => {
         // Since it's already in the library, just navigate to it to start immediately
         resetWorkout();
+        setStats({ totalSeconds: 0, correctSeconds: 0 });
         navigate('/training', { state: { workout: suggestedWorkout } });
     };
 
@@ -67,8 +81,36 @@ export default function Training() {
     // RENDER: PERFORMANCE DASHBOARD (COMPLETED STATE)
     // -------------------------------------------------------------------------------- //
     if (workoutStatus === 'completed') {
-        const mockAccuracy = 88;
-        const mockRating = "A-";
+        // Calculate dynamic accuracy
+        const calculatedAccuracy = stats.totalSeconds > 0
+            ? Math.round((stats.correctSeconds / stats.totalSeconds) * 100)
+            : 0;
+
+        // Calculate rating based on accuracy
+        let dynamicRating = "C";
+        if (calculatedAccuracy >= 95) dynamicRating = "S";
+        else if (calculatedAccuracy >= 90) dynamicRating = "A+";
+        else if (calculatedAccuracy >= 80) dynamicRating = "A";
+        else if (calculatedAccuracy >= 70) dynamicRating = "B";
+
+        // Generate Dynamic Feedback based on accuracy
+        let feedbackPoints = [];
+        if (calculatedAccuracy >= 90) {
+            feedbackPoints = [
+                { title: "Flawless Execution", desc: "You maintained exceptional form and kept your posture perfectly aligned.", color: "bg-emerald-500", border: "border-emerald-500/20", bgLight: "bg-emerald-500/10" },
+                { title: "Consistent Focus", desc: "Excellent control and pacing throughout the entire movement.", color: "bg-emerald-500", border: "border-emerald-500/20", bgLight: "bg-emerald-500/10" }
+            ];
+        } else if (calculatedAccuracy >= 70) {
+            feedbackPoints = [
+                { title: "Solid Overall Form", desc: "Good posture, but you had slight deviations from the target zone during peak fatigue.", color: "bg-emerald-500", border: "border-emerald-500/20", bgLight: "bg-emerald-500/10" },
+                { title: "Target Area Warning", desc: "Ensure your tracking nodes (e.g. hands) remain consistently in the correct orientation.", color: "bg-amber-500", border: "border-amber-500/20", bgLight: "bg-amber-500/10" }
+            ];
+        } else {
+            feedbackPoints = [
+                { title: "Form Breakdown Detected", desc: "You dropped out of the target posture frequently. Please review the tutorial video.", color: "bg-rose-500", border: "border-rose-500/20", bgLight: "bg-rose-500/10" },
+                { title: "Fatigue or Pacing", desc: "Try to slow down your reps to maintain better muscular control next time.", color: "bg-amber-500", border: "border-amber-500/20", bgLight: "bg-amber-500/10" }
+            ];
+        }
 
         return (
             <div className="flex flex-col h-full gap-8 overflow-y-auto no-scrollbar pb-10 animate-in fade-in zoom-in-95 duration-500">
@@ -85,13 +127,15 @@ export default function Training() {
                     <Card className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#18181B] to-[#27272A] border-[#27272A] relative overflow-hidden group">
                         <Target size={24} className="text-[#CBFB5E] mb-4 group-hover:scale-110 transition-transform" />
                         <h3 className="text-zinc-400 font-medium uppercase tracking-wider mb-2 text-sm">Form Accuracy</h3>
-                        <p className="text-6xl font-black text-white">{mockAccuracy}<span className="text-2xl text-zinc-500">%</span></p>
+                        <p className="text-6xl font-black text-white">{calculatedAccuracy}<span className="text-2xl text-zinc-500">%</span></p>
                     </Card>
 
                     <Card className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#18181B] to-[#27272A] border-[#27272A] group">
                         <Award size={24} className="text-yellow-400 mb-4 group-hover:scale-110 transition-transform" />
                         <h3 className="text-zinc-400 font-medium uppercase tracking-wider mb-2 text-sm">Session Rating</h3>
-                        <p className="text-6xl font-black text-yellow-500">{mockRating}</p>
+                        <p className={`text-6xl font-black ${calculatedAccuracy >= 90 ? 'text-[#CBFB5E]' : calculatedAccuracy >= 70 ? 'text-yellow-500' : 'text-rose-500'}`}>
+                            {dynamicRating}
+                        </p>
                     </Card>
 
                     <Card className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#18181B] to-[#27272A] border-[#27272A] group">
@@ -108,27 +152,15 @@ export default function Training() {
                             <AlertCircle className="text-rose-500" size={20} /> AI Feedback Points
                         </h2>
                         <ul className="space-y-4">
-                            <li className="flex items-start gap-3 bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">
-                                <div className="min-w-2 mt-1.5 h-2 rounded-full bg-rose-500" />
-                                <div>
-                                    <p className="font-bold text-white">Depth on Squats</p>
-                                    <p className="text-sm text-zinc-400 mt-1">You missed parallel depth on 15% of your recorded reps. Try widening your stance slightly next session.</p>
-                                </div>
-                            </li>
-                            <li className="flex items-start gap-3 bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
-                                <div className="min-w-2 mt-1.5 h-2 rounded-full bg-amber-500" />
-                                <div>
-                                    <p className="font-bold text-white">Upper Back Rounding</p>
-                                    <p className="text-sm text-zinc-400 mt-1">Detected minor rounding during the last 30 seconds. Keep your chest proud when fatigued.</p>
-                                </div>
-                            </li>
-                            <li className="flex items-start gap-3 bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
-                                <div className="min-w-2 mt-1.5 h-2 rounded-full bg-emerald-500" />
-                                <div>
-                                    <p className="font-bold text-white">Consistent Tempo</p>
-                                    <p className="text-sm text-zinc-400 mt-1">Excellent control on the eccentric portion of all movements.</p>
-                                </div>
-                            </li>
+                            {feedbackPoints.map((point, idx) => (
+                                <li key={idx} className={`flex items-start gap-3 p-4 rounded-xl border ${point.bgLight} ${point.border}`}>
+                                    <div className={`min-w-2 mt-1.5 h-2 rounded-full ${point.color}`} />
+                                    <div>
+                                        <p className="font-bold text-white">{point.title}</p>
+                                        <p className="text-sm text-zinc-400 mt-1">{point.desc}</p>
+                                    </div>
+                                </li>
+                            ))}
                         </ul>
                     </Card>
 
@@ -187,10 +219,10 @@ export default function Training() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
 
                 {/* Left: YouTube Video Reference */}
-                <Card className={`flex flex-col gap-4 !p-4 transition-all duration-300 ${workoutStatus === 'active' ? 'opacity-50 blur-sm scale-95 pointer-events-none' : ''}`}>
+                <Card className={`flex flex-col gap-4 !p-4 transition-all duration-300 ${workoutStatus === 'active' ? 'ring-1 ring-[#CBFB5E]/50 z-20 shadow-lg' : ''}`}>
                     <div className="flex justify-between items-center px-2">
                         <h2 className="font-bold text-white text-lg">Trainer Guide</h2>
-                        <button className="text-zinc-400 hover:text-white"><Maximize size={18} /></button>
+                        <button className="text-zinc-400 hover:text-white" title="Click Fullscreen inside the video player"><Maximize size={18} /></button>
                     </div>
                     <div className="w-full h-full rounded-xl overflow-hidden bg-black relative border border-[#27272A] min-h-[300px]">
                         <iframe
