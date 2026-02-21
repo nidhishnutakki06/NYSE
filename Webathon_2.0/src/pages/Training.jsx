@@ -13,10 +13,10 @@ export default function Training() {
 
     // Safely retrieve workout from navigation state or assign a fallback
     const workout = location.state?.workout || {
-        title: 'Full Body Core Crusher',
-        duration: '45 Min',
+        title: 'Barbell Overload',
+        duration: '40 Min',
         intensity: 'High',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+        url: 'https://www.youtube.com/embed/KP1sYz2VICk'
     };
 
     // Status can be 'idle', 'active', 'completed'
