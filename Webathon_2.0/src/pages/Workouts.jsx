@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Play } from 'lucide-react';
 import Card from '../components/Card';
 import Input from '../components/Input';
-import { MOCK_WORKOUT_LIBRARY } from '../services/mockData';
+import { useWorkouts } from '../context/WorkoutContext';
 
 export default function Workouts() {
     const navigate = useNavigate();
+    const { workouts } = useWorkouts();
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredWorkouts = MOCK_WORKOUT_LIBRARY.filter(w =>
+    const filteredWorkouts = workouts.filter(w =>
         w.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -52,7 +53,7 @@ export default function Workouts() {
                         </div>
 
                         <button
-                            onClick={() => navigate('/training')}
+                            onClick={() => navigate('/training', { state: { workout } })}
                             className="mt-6 w-full py-3 rounded-lg flex items-center justify-center gap-2 bg-[#18181B] border border-[#27272A] group-hover:bg-[#CBFB5E] group-hover:border-[#CBFB5E] group-hover:text-black text-white font-bold transition-all duration-300"
                         >
                             <Play size={18} /> Start Workout

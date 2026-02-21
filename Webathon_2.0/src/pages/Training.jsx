@@ -1,12 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Camera, AlertCircle, Maximize, Play, Pause, ChevronLeft, CheckCircle2, TrendingUp, Target, Award, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import PostureTracker from '../components/PostureTracker';
+import { useWorkouts } from '../context/WorkoutContext';
 
 export default function Training() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { addWorkout } = useWorkouts();
+
+    // Safely retrieve workout from navigation state or assign a fallback
+    const workout = location.state?.workout || {
+        title: 'Full Body Core Crusher',
+        duration: '45 Min',
+        intensity: 'High',
+        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    };
 
     // Status can be 'idle', 'active', 'completed'
     const [workoutStatus, setWorkoutStatus] = useState('idle');
@@ -43,6 +54,20 @@ export default function Training() {
         setWorkoutStatus('idle');
         setTimeLeft(15);
         setReps(0);
+    };
+
+    const handleScheduleSuggested = (suggestedWorkout) => {
+        // Create a new workout object and push to global context
+        const newWorkout = {
+            id: Date.now().toString(),
+            title: suggestedWorkout.title,
+            duration: suggestedWorkout.duration.split(' • ')[0],
+            intensity: suggestedWorkout.duration.split(' • ')[1],
+            target: suggestedWorkout.tag,
+            url: workout.url // Use the same base URL or a placeholder if a unique one isn't defined
+        };
+        addWorkout(newWorkout);
+        navigate('/workouts');
     };
 
     // -------------------------------------------------------------------------------- //
@@ -135,7 +160,7 @@ export default function Training() {
                                             <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#27272A] text-zinc-300">{w.tag}</span>
                                         </div>
                                     </div>
-                                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">Schedule</Button>
+                                    <Button onClick={() => handleScheduleSuggested(w)} variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">Schedule</Button>
                                 </div>
                             ))}
                         </div>
@@ -160,8 +185,8 @@ export default function Training() {
                         <ChevronLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Full Body Core Crusher</h1>
-                        <p className="text-zinc-400 text-sm mt-1">Intensity: High • Duration: 45 Min</p>
+                        <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">{workout.title}</h1>
+                        <p className="text-zinc-400 text-sm mt-1">Intensity: {workout.intensity} • Duration: {workout.duration}</p>
                     </div>
                 </div>
                 <Button onClick={toggleWorkout} variant={workoutStatus === 'active' ? 'secondary' : 'primary'} className="w-32 justify-center">
@@ -181,7 +206,7 @@ export default function Training() {
                     <div className="w-full h-full rounded-xl overflow-hidden bg-black relative border border-[#27272A] min-h-[300px]">
                         <iframe
                             className="absolute top-0 left-0 w-full h-full"
-                            src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0&controls=1&showinfo=0"
+                            src={`${workout.url}?autoplay=0&controls=1&showinfo=0`}
                             title="YouTube video player"
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
