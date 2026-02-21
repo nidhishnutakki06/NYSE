@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Flame, Target, Award, Star, Activity, Plus } from 'lucide-react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { MOCK_USER } from '../services/mockData';
+import { useWorkouts } from '../context/WorkoutContext';
 
 // Mock Data for the Calendar Section
 const generateWeekData = () => {
@@ -26,15 +28,17 @@ export default function HomePage() {
     const [greeting, setGreeting] = useState('');
     const [weekData, setWeekData] = useState([]);
     const [selectedDay, setSelectedDay] = useState(null);
+    const { workouts } = useWorkouts();
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Set Greeting based on time
         const hour = new Date().getHours();
         // eslint-disable-next-line react-hooks/set-state-in-effect
         if (hour < 12) setGreeting('Good Morning');
-         
+
         else if (hour < 18) setGreeting('Good Afternoon');
-         
+
         else setGreeting('Good Evening');
 
         // Initialize Calendar
@@ -206,13 +210,19 @@ export default function HomePage() {
 
                                 {selectedDay.workoutsTBD > 0 ? (
                                     <div className="flex flex-col gap-3">
-                                        {[...Array(selectedDay.workoutsTBD)].map((_, i) => (
-                                            <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-[#27272A]/50 border border-[#3F3F46]">
+                                        {/* Grab the first N workouts from the context based on workoutsTBD */}
+                                        {workouts.slice(0, selectedDay.workoutsTBD).map((workout) => (
+                                            <div key={workout.id} className="flex items-center justify-between p-4 rounded-xl bg-[#27272A]/50 border border-[#3F3F46]">
                                                 <div>
-                                                    <p className="font-bold text-white">{i === 0 ? 'Upper Body Push' : 'Liss Cardio'}</p>
-                                                    <p className="text-xs text-zinc-400 mt-1">{i === 0 ? '45 min • Strength' : '30 min • Recovery'}</p>
+                                                    <p className="font-bold text-white">{workout.title}</p>
+                                                    <p className="text-xs text-zinc-400 mt-1">{workout.duration} • {workout.category || workout.target}</p>
                                                 </div>
-                                                <Button size="sm">Start</Button>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => navigate('/training', { state: { workout } })}
+                                                >
+                                                    Start
+                                                </Button>
                                             </div>
                                         ))}
                                     </div>
