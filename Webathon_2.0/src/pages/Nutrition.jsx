@@ -3,6 +3,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { Plus, Sparkles, X, ChevronRight, Droplets, Coffee, UtensilsCrossed, Apple, Moon } from 'lucide-react';
+import { GoogleGenAI } from '@google/genai';
 
 export default function Nutrition() {
     const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -13,6 +14,8 @@ export default function Nutrition() {
     const [ingredients, setIngredients] = useState(['Chicken Breast', 'Rice', 'Broccoli', 'Eggs']);
     const [isGenerating, setIsGenerating] = useState(false);
     const [hasGeneratedPlan, setHasGeneratedPlan] = useState(false);
+    const [aiMeals, setAiMeals] = useState([]);
+    const [fetchError, setFetchError] = useState('');
 
     // Handlers
     const addIngredient = (e) => {
@@ -20,41 +23,83 @@ export default function Nutrition() {
         if (ingredientInput.trim() && !ingredients.includes(ingredientInput.trim())) {
             setIngredients([...ingredients, ingredientInput.trim()]);
             setIngredientInput('');
+            setFetchError('');
         }
     };
 
     const removeIngredient = (ing) => {
         setIngredients(ingredients.filter(i => i !== ing));
+        setFetchError('');
     };
 
-    const generateAIPlan = () => {
+    const getIconForType = (type) => {
+        switch (type.toLowerCase()) {
+            case 'breakfast': return <Coffee size={16} />;
+            case 'snack 1': return <Apple size={16} />;
+            case 'lunch': return <UtensilsCrossed size={16} />;
+            case 'drinks': return <Droplets size={16} />;
+            case 'dinner': return <UtensilsCrossed size={16} />;
+            case 'supper': return <Moon size={16} />;
+            default: return <UtensilsCrossed size={16} />;
+        }
+    };
+
+    const generateAIPlan = async () => {
         if (ingredients.length === 0) return;
         setIsGenerating(true);
-        // Mock AI Loading delay
-        setTimeout(() => {
+        setFetchError('');
+
+        try {
+            const ai = new GoogleGenAI({ apiKey: 'AIzaSyB_xIKcQiFHnJJUH6gShQ3VhOxI7YRjpyY' });
+
+            const prompt = `You are an expert sports nutritionist AI. I have the following ingredients: ${ingredients.join(', ')}.
+Generate a highly optimized, full 7-day weekly meal plan maximizing macronutrient needs using primarily these ingredients. Make each day's meals unique to provide variety across the week.
+Return the response STRICTLY as a raw JSON array, without markdown formatting or code blocks.
+The JSON array must contain exactly 7 inner arrays (representing Monday through Sunday).
+Each of the 7 inner arrays must contain exactly 6 objects (representing that day's meals in order: Breakfast, Snack 1, Lunch, Drinks, Dinner, Supper).
+Each meal object must have the following keys:
+- type: the meal type (MUST BE EXACTLY ONE OF: "Breakfast", "Snack 1", "Lunch", "Drinks", "Dinner", "Supper")
+- name: a creative, appetizing name for the meal
+- desc: a short sentence describing the meal
+- cals: integer representing total calories
+- p: integer representing grams of protein
+- c: integer representing grams of carbohydrates
+- f: integer representing grams of fats
+Ensure the JSON is perfectly formatted. Do not include any text outside the JSON array.`;
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+
+            const textResponse = response.text.trim();
+            const jsonString = textResponse.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+            const parsedWeeklyMeals = JSON.parse(jsonString);
+
+            if (Array.isArray(parsedWeeklyMeals) && parsedWeeklyMeals.length === 7) {
+                const weeklyMealsWithIcons = parsedWeeklyMeals.map((dayMeals, dayIdx) =>
+                    dayMeals.map((m, mealIdx) => ({
+                        ...m,
+                        id: `d${dayIdx}-m${mealIdx}`, // Ensure unique ID
+                        icon: getIconForType(m.type)
+                    }))
+                );
+                setAiMeals(weeklyMealsWithIcons);
+                setHasGeneratedPlan(true);
+            } else {
+                setFetchError('Failed to generate a complete 7-day weekly plan. Please try again.');
+            }
+        } catch (error) {
+            console.error('AI Generation Error:', error);
+            setFetchError('Error connecting to the AI. Please verify the API key or try again.');
+        } finally {
             setIsGenerating(false);
-            setHasGeneratedPlan(true);
-        }, 2000);
+        }
     };
 
-    // Mock Dynamic Data Generation (6 Meals)
-    const getMealsForDay = (dayIndex) => {
-        // Just adding some slight variation based on day index to prove it changes
-        const v = dayIndex;
-
-        return [
-            { id: 'm1', type: 'Breakfast', icon: <Coffee size={16} />, name: `Power Scramble`, desc: `3 Eggs, Spinach, and 1 slice Whole Wheat Toast.`, cals: 320 + (v * 5), p: 24, c: 15, f: 18 },
-            { id: 'm2', type: 'Snack 1', icon: <Apple size={16} />, name: `Greek Yogurt Twist`, desc: `Plain Greek Yogurt with mixed berries and a drizzle of honey.`, cals: 180 + (v * 2), p: 15, c: 22, f: 0 },
-            { id: 'm3', type: 'Lunch', icon: <UtensilsCrossed size={16} />, name: `Lemon Herb Chicken Bowl`, desc: `Grilled Chicken Breast, Quinoa, and steamed Broccoli.`, cals: 450 + (v * 10), p: 45, c: 40, f: 12 },
-            { id: 'm4', type: 'Drinks', icon: <Droplets size={16} />, name: `Pre-Workout Matrix`, desc: `Whey Protein isolate shake with Creatine and 1 Banana.`, cals: 220 + v, p: 25, c: 27, f: 2 },
-            { id: 'm5', type: 'Dinner', icon: <UtensilsCrossed size={16} />, name: `Teriyaki Glazed Salmon`, desc: `Baked Salmon with Jasmine Rice and Asparagus.`, cals: 550 + (v * 12), p: 40, c: 45, f: 22 },
-            { id: 'm6', type: 'Supper', icon: <Moon size={16} />, name: `Casein Pudding`, desc: `Casein protein mixed with almond milk, topped with walnuts.`, cals: 200 + (v * 4), p: 24, c: 8, f: 9 },
-        ];
-    };
-
-    const currentMeals = getMealsForDay(selectedDay);
-    const dailyCals = currentMeals.reduce((acc, meal) => acc + meal.cals, 0);
-    const dailyProtein = currentMeals.reduce((acc, meal) => acc + meal.p, 0);
+    const currentMeals = aiMeals.length === 7 ? aiMeals[selectedDay] : [];
+    const dailyCals = currentMeals.reduce((acc, meal) => acc + (Number(meal.cals) || 0), 0);
+    const dailyProtein = currentMeals.reduce((acc, meal) => acc + (Number(meal.p) || 0), 0);
 
     return (
         <div className="flex flex-col gap-8 h-full pb-8">
@@ -104,7 +149,8 @@ export default function Nutrition() {
                         </div>
                     </div>
 
-                    <div className="lg:w-64 flex flex-col justify-end">
+                    <div className="lg:w-64 flex flex-col justify-end gap-2">
+                        {fetchError && <p className="text-xs text-red-400 font-semibold">{fetchError}</p>}
                         <Button
                             onClick={generateAIPlan}
                             disabled={ingredients.length === 0 || isGenerating}
